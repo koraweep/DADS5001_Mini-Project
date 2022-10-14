@@ -11,11 +11,11 @@
 3) Income, Expense, and Saving of each Region and Social Class in Thailand
 4) Finding Lowest monthly saving group in Thailand
 # Dataset Information
-**File Name:**   space_missions.csv\
+**File Name:**   1) Income.csv  2) Expense.csv\
 **Source:**   (https://catalog.nso.go.th/dataset/?res_format=CSV&groups=os-08) \
 **Role and Collumn:**    
 * รายได้เฉลี่ยต่อครัวเรือน (4,600 rows)
-* 7 Collumn
+* 7 Column
   *  year           
   *  region         
   *  source_income   
@@ -24,7 +24,7 @@
   *  unit           
   *  source
 * รายจ่ายเฉลี่ยต่อครัวเรือน (2,600 rows)
-* 7 Collumn
+* 7 Column
   *  year     
   *  region         
   *  type_expenditur  
@@ -32,6 +32,21 @@
   *  value            
   *  unit          
   *  source
+  
+# DATA COLLECTION
+![Capture](https://user-images.githubusercontent.com/101727971/195891361-aba3a898-005d-47c5-a2eb-4e54b420992d.JPG)
+* ข้อมูลมากจาก Website สํานักงานสถิติแห่งชาติในหมวดสถิติรายได้และค่าใช้จ่ายขอครัวเรือน
+
+![image](https://user-images.githubusercontent.com/101727971/195892753-27d5b650-b957-4277-8d26-d093e5367823.png)
+
+# DATA CLEANING
+* ข้อมูลต้นฉบับมีข้อมูลเชิง aggregate(รวม) อยู่ในหลาย column เช่น region มี ทั่วประเทศ หรือ source_income มี รายได้ทั้งสิ้น(รวม) ซึ่งข้อมูลเหล่านี้ในต้นฉบับเป็นค่าคงที่ ถ้ามีการปรับแต่งข้อมูลในตาราง ข้อมูลรวมเหล่านี้จะไม่สามารถใช้ได้ เลยจะขอตัดออก และทําข้อมูลรวมขึ้นมาเองด้วยใช้ aggregate function
+
+# Cleaning Income Table
+![image](https://user-images.githubusercontent.com/101727971/195894819-f9ed97bd-d64b-43fb-946b-32807acd8681.png)
+
+
+
 # DATA ANALYSIS (GROUP,TRANSFORM,PLOT)
 **1. Time Series of Income and Expense**
 ````group_in_yr = df_in.groupby(['year','source_income'])
@@ -57,3 +72,4 @@ line_plot_yr = df_merge_yr.melt( id_vars=['year'],value_vars=['Avg. Monthly Inco
 display(line_plot_yr)
 display(df_merge_yr)
 ````
+
