@@ -158,22 +158,27 @@ for col in expense_column:
 ![image](https://user-images.githubusercontent.com/101727971/195996043-e7d3f203-426a-4f46-af69-1f7bca6ba518.png)
 
 
-* ทําการตัดข้อมูลรวมออกในแต่ละ Columns ของ Dataset expense
 * Drop colume 'source' ซึ่งคิดว่าไม่น่าจะได้ใช้งานออก และตัดข้อมูล 'รวม' ที่อยู่ในแต่ละ Columns ของ dataset expense ออก ยกเว้น 'ค่าใช้จ่ายที่ไม่เกี่ยวกับการอุปโภคบริโภค (รวม)' เนื่องจากในตารางข้อมูลจริงๆแล้วไม่ได้เป็นข้อมูลเชิง aggregate
 
 ````
-expense_column = df_expense.columns.values.tolist()
-for col in expense_column:
-    print(f'{col.upper()}: {df_expense[col].unique()}')
+df_x = df_expense.drop(columns =['source'])
+df_x = df_x.replace('ค่าใช้จ่ายที่ไม่เกี่ยวกับการอุปโภคบริโภค (รวม)','ค่าใช้จ่ายที่ไม่เกี่ยวกับการอุปโภคบริโภค')
+drop_string = ['ทั่วประเทศ','รวม']
+df_x = df_x[ ~df_x.region.str.contains('|'.join(drop_string)) ]
+df_x = df_x[ ~df_x.type_expenditur.str.contains('|'.join(drop_string)) ]
+df_x = df_x[ ~df_x.soc_eco_class.str.contains('|'.join(drop_string)) ]
 ````
 
+* เนื่องจากข้อมูลรายได้ (Income table) ของ soc_eco_class ที่เป็น 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร' ที่ region เป็น 'กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ' มีข้อมูลในตารางที่เป็น NaN และ 0(ปรับแก้ไปแล้ว) จึงมาสํารวจในฝั้งของ Expense บ้าง พบว่าจะมีปัญหาคล้ายกัน โดยมีบางปีที่อาจจะไม่ได้ทําการสํารวจซึ่งมีค่าใช้จ่ายเป็น 0
 
 
-![image](https://user-images.githubusercontent.com/101727971/195926800-c6cfef97-f0e5-49ce-a00a-7643660a3ad9.png)
+````
+df_x_adjusted = df_x[(df_x['region'] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') & (df_x['soc_eco_class'] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร')]
+group_x_adjusted = df_x_adjusted.groupby(['year']).agg('sum')
+group_x_adjusted.reset_index()
+````
 
-* เนื่องจากข้อมูลรายได้จาก ผู้ทําการประมงในกรุงเทพและจังหวัดไกล้เคียงมีปัญหา(ปรับแก้ไปแล้ว) จึงมาสํารวจในฝั้งของ Expense บ้าง พบว่าจะเป็นคล้ายกันโดยมีบางปีที่อาจจะไม่ได้ทําการสํารวจทําให้ค่าใช้จ่ายเป็น 0
-
-![image](https://user-images.githubusercontent.com/101727971/195927294-92d24b20-0334-4492-8922-29f2e74b0983.png)
+![image](https://user-images.githubusercontent.com/101727971/195996827-b3614674-7b55-4088-a60b-1e14ad66ca68.png)
 
 * ทําการหาค่าเฉลี่ยของแต่ละประเภท เพื่อไปใส่ในข้อมูลปีที่ค่าใช้จ่ายสําหรับผู้ทําการ ประมง.. ในกรุงเทพและจังหวัดไกล้เคียงที่เดิมเป็น 0
 
