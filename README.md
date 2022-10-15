@@ -36,50 +36,138 @@
 
 # DATA COLLECTION
 ![Capture](https://user-images.githubusercontent.com/101727971/195891361-aba3a898-005d-47c5-a2eb-4e54b420992d.JPG)
-* ข้อมูลมากจาก Website สํานักงานสถิติแห่งชาติในหมวดสถิติรายได้และค่าใช้จ่ายขอครัวเรือน
 
-![image](https://user-images.githubusercontent.com/101727971/195892753-27d5b650-b957-4277-8d26-d093e5367823.png)
+````
+data_income = pd.read_csv('Income.csv')
+data_expense = pd.read_csv('Expense.csv')
+````
 
 # DATA CLEANING
 * ข้อมูลต้นฉบับมีข้อมูลเชิง aggregate(รวม) อยู่ในหลาย column เช่น region มี ทั่วประเทศ หรือ source_income มี รายได้ทั้งสิ้น(รวม) ซึ่งข้อมูลเหล่านี้ในต้นฉบับเป็นค่าคงที่ ถ้ามีการปรับแต่งข้อมูลในตาราง ข้อมูลรวมเหล่านี้จะไม่สามารถใช้ได้ เลยจะขอตัดออก และทําข้อมูลรวมขึ้นมาเองด้วยใช้ aggregate function
 
 # Cleaning Income Table
-* ทําการสํารวจข้อมูลในตาราง Income Dataset
 
-![image](https://user-images.githubusercontent.com/101727971/195910820-7a9b1dcb-da89-4216-8202-2f33bcc5d6e6.png)
+* ทําการสํารวจข้อมูลในตาราง Income Dataset พบว่าข้อมูลนตาราง value มีจํานวนไม่เท่ากับกลุ่มอื่นๆ
+
+````
+df_income = data_income
+df_income.info()
+df_income.head(3)
+````
+![image](https://user-images.githubusercontent.com/101727971/195992627-d02d079e-9809-4e49-a169-5b64a486b955.png)
 
 
-![image](https://user-images.githubusercontent.com/101727971/195910451-433954ad-b605-4b1e-a455-ca4a32130546.png)
+* ทําการสํารวจข้อมูลในแต่ละ Columns ว่ามีข้อมูลที่เป็น unique อะไรบ้าง
 
-* ทําการตัดข้อมูลรวมออกในแต่ละ Columns ของ dataset income
+````
+income_column = df_income.columns.values.tolist()
+for col in income_column:
+    print(f'{col.upper()}: {df_income[col].unique()}')
+````
+![image](https://user-images.githubusercontent.com/101727971/195992707-b181ccf6-5372-4667-893c-2153489000d4.png)
 
-![image](https://user-images.githubusercontent.com/101727971/195911729-f9c99c38-e99d-4898-b6d2-f568b3d40f3f.png)
 
-* ข้อมูลใน Dataset มี NaN อยู่หลักๆมาจาก Column ที่ region เป็น กรุงเทพและจังหวัดไกล้เคียง และ soc_eco_class เป็น 'ผู้ทําการประมง ป่าไม้า...' ซึ่งทําการสํารวจข้อมูลเพิ่มเติมพบว่านอกจากข้อมูล NaN แล้วยังมีข้อมูลที่เป็น 0 อยู่หลายรายการซึ่งคาดว่าอาจจะไม่ได้ทําการเก็บข้อมูลเหล่านี้มา โดยเฉพาะรายได้ประจําจากการทํางานที่ไม่น่าเป็น 0
+* Drop colume 'source' ซึ่งคิดว่าไม่น่าจะได้ใช้งานออก และตัดข้อมูล 'รวม' ที่อยู่ในแต่ละ Columns ของ dataset income ออก ยกเว้น 'รายได้ประจําที่ไม่เป็นตัวเงิน (รวม) 'เนื่องจากในตารางข้อมูลจริงๆแล้วไม่ได้เป็นข้อมูลเชิง aggregate 
 
-![image](https://user-images.githubusercontent.com/101727971/195913440-73ae06ff-5739-4223-9f95-250cccb462c9.png)
+````
+df_in = df_income.replace('รายได้ประจำที่ไม่เป็นตัวเงิน (รวม)','รายได้ประจำที่ไม่เป็นตัวเงิน')
+drop_string_in = ['ทั่วประเทศ','รวม']
+df_in = df_in[ ~df_in.region.str.contains('|'.join(drop_string_in)) ]
+df_in = df_in[ ~df_in.source_income.str.contains('|'.join(drop_string_in)) ]
+df_in = df_in[ ~df_in.soc_eco_class.str.contains('|'.join(drop_string_in)) ]
+````
 
-* ปรับข้้อมูล NaN ให้เป็น 0 จากนั้น replace value ข้อมูล'รายได้ประจําจากการทํางาน' ของกลุ่ม 'ผู้ทํางานประมง ป่าไม้...' ในปี 2554,2560,2562 ที่เป็น 0 ด้วยค่าเฉลี่ยของรายได้ในปี 2556 กับ 2558
+* ข้อมูลใน Dataset มี NaN อยู่หลักๆมาจาก Column ที่ region เป็น 'กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ' และ soc_eco_class เป็น 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร' ซึ่งทําการสํารวจข้อมูลเพิ่มเติมพบว่านอกจากข้อมูล NaN แล้วยังมีข้อมูลที่เป็น 0 อยู่หลายรายการซึ่งคาดว่าอาจจะไม่ได้ทําการเก็บข้อมูลเหล่านี้มา โดยเฉพาะ 'รายได้ประจำที่เป็นตัวเงิน (รายได้จากการทำงาน)' ที่ไม่ควรที่จะเป็น 0
 
-![image](https://user-images.githubusercontent.com/101727971/195917802-8e269dc6-658a-4c06-8631-4eac5efaa273.png)
+````
+df_in[df_in.isna().any(axis=1)]
+````
 
-![image](https://user-images.githubusercontent.com/101727971/195921843-8bc92a6f-dac3-48be-a560-d4b22507de07.png)
+![image](https://user-images.githubusercontent.com/101727971/195994420-f16e7590-f37f-4709-8a53-141c7ed3ffcd.png)
 
-![image](https://user-images.githubusercontent.com/101727971/195922279-e3b829ee-d990-4525-9e56-9623ba2c3ce3.png)
+
+````
+df_adjusted = df_in.loc[(df_in['soc_eco_class'] == 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร') & 
+          ((df_in['value'] == 0) | (df_in['value'].isnull()))]
+df_adjusted
+````
+![image](https://user-images.githubusercontent.com/101727971/195994645-3bd30961-1c77-4f4b-8a89-8ce3370f9286.png)
+
+
+* ปรับข้้อมูล NaN ให้เป็น 0 จากนั้น replace value ข้อมูล'รายได้ประจำที่เป็นตัวเงิน (รายได้จากการทำงาน)' ของกลุ่ม 'ผู้ทํางานประมง ป่าไม้...' ในปี 2554,2560,2562 ที่เป็น 0 ด้วยค่าเฉลี่ยของรายได้ในปี 2556 กับ 2558
+
+````
+df_in_adjusted = df_in_adjusted.fillna(0)
+df_in_adjusted.head(5)
+df_adjusted
+````
+![image](https://user-images.githubusercontent.com/101727971/195995154-e636455c-bd75-4e2e-b6f5-01e70e165cdc.png)
+
+
+````
+df_in_adjusted2 = df_in_adjusted[df_in_adjusted['value'] != 0]
+group_adjusted = df_in_adjusted2.groupby(['source_income'])
+df_in_adjusted_value = group_adjusted.agg('mean')
+df_in_adjusted_value.drop(['year'], axis=1,inplace=True)
+df_in_adjusted_value.reset_index()
+````
+![image](https://user-images.githubusercontent.com/101727971/195995231-697fb5d9-62ca-423a-967e-75138f3711de.png)
+
+
+````
+df_in.loc[(df_in['soc_eco_class'] == 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร') & 
+          (df_in['source_income'] == 'รายได้ประจำที่เป็นตัวเงิน (รายได้จากการทำงาน)') &
+          ((df_in['value'] == 0) | (df_in['value'].isnull()))]
+````
+
+![image](https://user-images.githubusercontent.com/101727971/195995380-4ab4902c-6fca-4b11-98c1-bb1fdc0b3808.png)
+
+
+````
+replace_value = df_in_adjusted_value['value'].tolist()
+df_in.loc[608,'value'] = replace_value[0]
+df_in.loc[641,'value'] = replace_value[0]
+df_in.loc[652,'value'] = replace_value[0]
+df_in.fillna(0,inplace=True)
+````
 
 * สํารวจข้อมูลอีกครั้งพบว่า Dataset มีจํานวนเท่ากันแล้วโดยไม่มี  NaN 
 
-![image](https://user-images.githubusercontent.com/101727971/195925035-bcda9cf3-e2ae-40bf-8657-2ea896d2da1f.png)
+![image](https://user-images.githubusercontent.com/101727971/195995493-bc34eabd-eb60-4043-9824-c8a0d8ab2299.png)
+
 
 # Cleaning Expense Table
 
 * ทําการสํารวจข้อมูลในตาราง Expense Table
 
-![image](https://user-images.githubusercontent.com/101727971/195926040-b6debbcc-3747-4f4c-a00d-5a05fd4962a6.png)
+````
+df_expense = data_expense
+df_expense.info()
+df_expense.head(3)
+````
+![image](https://user-images.githubusercontent.com/101727971/195995885-78da3e3e-5e0c-4c5d-93a5-7091ae2febef.png)
+![image](https://user-images.githubusercontent.com/101727971/195995928-3395ab50-b6c4-4729-be04-ffb1d90b758b.png)
 
-![image](https://user-images.githubusercontent.com/101727971/195926317-7769e047-8e67-4739-912b-8c489b7a8a5d.png)
 
-* ทําการตัดข้อมูลรวมออกในแต่ละ Columns ของ dataset expense
+````
+expense_column = df_expense.columns.values.tolist()
+for col in expense_column:
+    print(f'{col.upper()}: {df_expense[col].unique()}')
+````
+
+![image](https://user-images.githubusercontent.com/101727971/195996043-e7d3f203-426a-4f46-af69-1f7bca6ba518.png)
+
+
+* ทําการตัดข้อมูลรวมออกในแต่ละ Columns ของ Dataset expense
+* Drop colume 'source' ซึ่งคิดว่าไม่น่าจะได้ใช้งานออก และตัดข้อมูล 'รวม' ที่อยู่ในแต่ละ Columns ของ dataset expense ออก ยกเว้น 'ค่าใช้จ่ายที่ไม่เกี่ยวกับการอุปโภคบริโภค (รวม)' เนื่องจากในตารางข้อมูลจริงๆแล้วไม่ได้เป็นข้อมูลเชิง aggregate
+
+````
+expense_column = df_expense.columns.values.tolist()
+for col in expense_column:
+    print(f'{col.upper()}: {df_expense[col].unique()}')
+````
+
+
 
 ![image](https://user-images.githubusercontent.com/101727971/195926800-c6cfef97-f0e5-49ce-a00a-7643660a3ad9.png)
 
