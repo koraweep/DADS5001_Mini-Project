@@ -169,7 +169,7 @@ df_x = df_x[ ~df_x.type_expenditur.str.contains('|'.join(drop_string)) ]
 df_x = df_x[ ~df_x.soc_eco_class.str.contains('|'.join(drop_string)) ]
 ````
 
-* เนื่องจากข้อมูลรายได้ (Income table) ของ soc_eco_class ที่เป็น 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร' ที่ region เป็น 'กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ' มีข้อมูลในตารางที่เป็น NaN และ 0(ปรับแก้ไปแล้ว) จึงมาสํารวจในฝั้งของ Expense บ้าง พบว่าจะมีปัญหาคล้ายกัน โดยมีบางปีที่อาจจะไม่ได้ทําการสํารวจซึ่งมีค่าใช้จ่ายเป็น 0
+* เนื่องจากข้อมูลรายได้ (Income table) ของ soc_eco_class ที่เป็น 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร' ที่ region เป็น 'กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ' มีข้อมูลในตารางที่เป็น NaN และ 0(ปรับแก้ไปแล้ว) จึงมาสํารวจในฝั้งของ Expense บ้าง พบว่าจะมีปัญหาคล้ายกัน โดยในปี 2554 และ 2560 มีค่าใช้จ่ายเป็น 0 ซึ่งอาจจะเกิดจากไม่ได้ทําการเก็บข้อมูลในปีเหล่านี้
 
 
 ````
@@ -180,15 +180,51 @@ group_x_adjusted.reset_index()
 
 ![image](https://user-images.githubusercontent.com/101727971/195996827-b3614674-7b55-4088-a60b-1e14ad66ca68.png)
 
-* ทําการหาค่าเฉลี่ยของแต่ละประเภท เพื่อไปใส่ในข้อมูลปีที่ค่าใช้จ่ายสําหรับผู้ทําการ ประมง.. ในกรุงเทพและจังหวัดไกล้เคียงที่เดิมเป็น 0
+* ทําการหาค่าเฉลี่ยของค่าใช้จ่ายในแต่ละประเภทในปีที่ 2556, 2558, 2562 ซึ่งข้อมูลไม่ได้เป็น 0 เพื่อไป replace value ในปี 2554 และ 2560 ซึ่งค่าใช้จ่ายเป็น 0 และทําการปรับค่าใช้จากรูปแบบ dataframe เป็น list ง่ายต่อการทํา replace value
 
-![image](https://user-images.githubusercontent.com/101727971/195927790-775f201d-e0d1-428f-ada2-ea721fc50747.png)
 
-* ทําการ replace ข้อมูลเฉลี่ยค่าใช้จ่ายของตัวเรือนแต่ละประเภท ด้วยข้อมูลค่าใช้จ่ายเฉลี่ยที่หามาได้ 
+````
+df_x_adjusted = group2_x_adjusted.drop(group2_x_adjusted[(group2_x_adjusted['year'] == 2554) | 
+                (group2_x_adjusted['year'] == 2560)].index)
+df_x_adjusted = df_x_adjusted.groupby(['type_expenditur']).agg('mean')
+df_x_adjusted = df_x_adjusted.drop(columns =['year'])
+df_x_adjusted = df_x_adjusted.reset_index()
+list_x_adjusted = df_x_adjusted.value.tolist()
+display(df_x_adjusted)
+print(list_x_adjusted)
+````
 
-![image](https://user-images.githubusercontent.com/101727971/195928625-bd82e6f9-6fe0-4075-9e3c-0c6951f412a8.png)
+![image](https://user-images.githubusercontent.com/101727971/196022352-b16b8501-1af3-4a5c-8fe3-8dcde2580a45.png)
 
-* สํารวจ Dataset ที่ปรับแก้อีกรอบ พบว่าข้อมูลน่าจะไม่มีปัญหา
+
+* ทําการ replace ข้อมูลเฉลี่ยค่าใช้จ่ายของตัวเรือนแต่ละประเภทที่ข้อมูลเป็น 0 ในตารางหลัก ด้วยข้อมูลค่าใช้จ่ายเฉลี่ยที่หามาได้ โดยทําการ replace ทั้ง 10 ประเภทที่ข้อมูลไม่เป็น 0 (ตัวอย่างการทํา 2 ครั้งด้านล่าง)
+
+````
+df_x[((df_x['year'] == 2554)|(df_x['year'] == 2560)) & (df_x['region'] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
+            & (df_x['soc_eco_class'] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร')
+            & (df_x['type_expenditur'] == 'ค่าใช้จ่ายที่ไม่เกี่ยวกับการอุปโภคบริโภค')]
+````
+![image](https://user-images.githubusercontent.com/101727971/196022521-59695df3-cf47-4d7c-a47a-28b87b2b14e9.png)
+
+````
+df_x.loc[656,'value'] = list_x_adjusted[0]
+df_x.loc[1088,'value'] = list_x_adjusted[0]
+````
+
+````
+df_x[((df_x['year'] == 2554)|(df_x['year'] == 2560)) & (df_x['region'] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
+            & (df_x['soc_eco_class'] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร')
+            & (df_x['type_expenditur'] == 'ค่าใช้จ่ายเพื่อการอุปโภคบริโภค (การบันเทิง การอ่านและกิจกรรมทางศาสนา)')] 
+````
+
+![image](https://user-images.githubusercontent.com/101727971/196022624-08038cb5-be3d-47a7-81c0-7cfad1b2fc96.png)
+
+````
+df_x.loc[1198,'value'] = list_x_adjusted[2]
+df_x.loc[1645,'value'] = list_x_adjusted[2]
+````
+
+* สํารวจ Dataset ที่ปรับแก้อีกรอบ พบว่าข้อมูลน่าจะไม่มีปัญหา สามารถนําไปใข้งานได้
 
 ![image](https://user-images.githubusercontent.com/101727971/195929027-69850db0-056d-4e5c-82f5-d911c9ebe6a2.png)
 
