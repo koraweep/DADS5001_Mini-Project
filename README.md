@@ -43,7 +43,7 @@ data_expense = pd.read_csv('Expense.csv')
 ````
 
 # DATA CLEANSING
-* ข้อมูลต้นฉบับมีข้อมูลเชิง aggregate(รวม) อยู่ในหลาย column เช่น region มี ทั่วประเทศ หรือ source_income มี รายได้ทั้งสิ้น(รวม) ซึ่งข้อมูลเหล่านี้ในต้นฉบับเป็นค่าคงที่ ถ้ามีการปรับแต่งข้อมูลในตาราง ข้อมูลรวมเหล่านี้จะไม่สามารถใช้ได้ เลยจะขอตัดออก และทําข้อมูลรวมขึ้นมาเองด้วยใช้ aggregate function
+* ข้อมูลต้นฉบับมีข้อมูลเชิง aggregate(รวม) อยู่ในหลาย column เช่น region มี ทั่วประเทศ หรือ source_income มี รายได้ทั้งสิ้น(รวม) ซึ่งข้อมูลเหล่านี้ในต้นฉบับเป็นค่าคงที่ ถ้ามีการปรับแต่งข้อมูลในตาราง ข้อมูลรวมเหล่านี้จะไม่สามารถใช้ได้ เลยจะขอตัดออก และทําข้อมูลรวมขึ้นมาเองด้วยใช้ aggregate function โดยขอใช้ assumption ว่าการเก็บข้อมูลในแต่ละประเภทมีจํานวนเท่าๆกัน
 
 # Cleansing Income Table
 
@@ -302,13 +302,8 @@ display(df_in2_type)
 * Group ข้อมูลประเภทของรายจ่ายตามประเภท(Categories) จากนั้นปรับข้อมูลรายจ่ายให้ตัวเลขเป็นแบบติดลบ และทําการ Sort โดยใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562
 
 ````
-group_x_type = df_x2.groupby(['region','type_expenditur','soc_eco_class'])
-df_x2_type = group_x_type.agg('mean')
-group_x_type = df_x2.groupby(['type_expenditur','soc_eco_class'])
-df_x2_type = group_x_type.agg('mean')
 group_x_type = df_x2.groupby(['type_expenditur'])
 df_x2_type = group_x_type.agg('mean')
-
 df_x2_type.drop('year',inplace=True,axis=1)
 df_x2_type = df_x2_type.astype({'value': int}).reset_index()
 df_x2_type['value'] = -df_x2_type['value'].abs()
@@ -435,9 +430,7 @@ Q3) ภาคไหนใดในประเทศมีเงินคงเ�
 * ปรับแต่งชื่อตามความเหมาะสม
 
 ````
-group_in_class = df_in2.groupby(['soc_eco_class','region','source_income'])
-df_in2_class = group_in_class.agg('mean').reset_index()
-group_in_class = df_in2_class.groupby(['soc_eco_class','source_income'])
+group_in_class = df_in2.groupby(['soc_eco_class','source_income'])
 df_in2_class = group_in_class.agg('mean').reset_index()
 group_in_class = df_in2_class.groupby(['soc_eco_class'])
 df_in2_class = group_in_class.agg('sum').reset_index()
@@ -447,9 +440,7 @@ df_in2_class
 ````
 
 ````
-group_x_class = df_x2.groupby(['soc_eco_class','region','type_expenditur'])
-df_x2_class = group_x_class.agg('mean').reset_index()
-group_x_class = df_x2_class.groupby(['soc_eco_class','type_expenditur'])
+group_x_class = df_x2.groupby(['soc_eco_class','type_expenditur'])
 df_x2_class = group_x_class.agg('mean').reset_index()
 group_x_class = df_x2_class.groupby(['soc_eco_class'])
 df_x2_class = group_x_class.agg('sum').reset_index()
@@ -507,21 +498,19 @@ Q4) คนประกอบอาชีพอะไรมีเงินคง�
 
 ````
 df_in_argi = df_in[(df_in['soc_eco_class'] == 'คนงานเกษตร')]
-group_in_argi = df_in_argi.groupby(['year','region','soc_eco_class','source_income'])
+group_in_argi = df_in_argi.groupby(['year','region','source_income'])
 df_in_argi = group_in_argi.agg('mean').reset_index()
-group_in_argi = df_in_argi.groupby(['year','region','soc_eco_class'])
+group_in_argi = df_in_argi.groupby(['year','region'])
 df_in_argi = group_in_argi.agg('sum').reset_index()
-df_in_argi = df_in_argi.drop(columns=['soc_eco_class'])
 df_in_argi = df_in_argi.replace('กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
 ````
 
 ````
 df_x_argi = df_x[(df_x['soc_eco_class'] == 'คนงานเกษตร')]
-group_x_argi = df_x_argi.groupby(['year','region','soc_eco_class','type_expenditur'])
+group_x_argi = df_x_argi.groupby(['year','region','type_expenditur'])
 df_x_argi = group_x_argi.agg('mean').reset_index()
-group_x_argi = df_x_argi.groupby(['year','region','soc_eco_class'])
+group_x_argi = df_x_argi.groupby(['year','region'])
 df_x_argi = group_x_argi.agg('sum').reset_index()
-df_x_argi = df_x_argi.drop(columns=['soc_eco_class'])
 ````
 
 ````
