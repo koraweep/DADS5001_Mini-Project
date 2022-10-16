@@ -105,11 +105,10 @@ df_adjusted
 
 
 ````
-df_in_adjusted2 = df_in_adjusted[df_in_adjusted['value'] != 0]
-group_adjusted = df_in_adjusted2.groupby(['source_income'])
-df_in_adjusted_value = group_adjusted.agg('mean')
+df_in_adjusted_value = df_in_adjusted[df_in_adjusted['value'] != 0]
+df_in_adjusted_value = df_in_adjusted_value.groupby(['source_income']).agg('mean').reset_index()
 df_in_adjusted_value.drop(['year'], axis=1,inplace=True)
-df_in_adjusted_value.reset_index()
+df_in_adjusted_value
 ````
 ![image](https://user-images.githubusercontent.com/101727971/195995231-697fb5d9-62ca-423a-967e-75138f3711de.png)
 
@@ -186,9 +185,8 @@ group_x_adjusted.reset_index()
 ````
 df_x_adjusted = group2_x_adjusted.drop(group2_x_adjusted[(group2_x_adjusted['year'] == 2554) | 
                 (group2_x_adjusted['year'] == 2560)].index)
-df_x_adjusted = df_x_adjusted.groupby(['type_expenditur']).agg('mean')
+df_x_adjusted = df_x_adjusted.groupby(['type_expenditur']).agg('mean').reset_index()
 df_x_adjusted = df_x_adjusted.drop(columns =['year'])
-df_x_adjusted = df_x_adjusted.reset_index()
 list_x_adjusted = df_x_adjusted.value.tolist()
 display(df_x_adjusted)
 print(list_x_adjusted)
@@ -237,12 +235,10 @@ df_x.loc[1645,'value'] = list_x_adjusted[2]
 
 * ทําการ grouping ข้อมูล รายได้ และ รายจ่าย ให้เป็นรูปแบบรายปี และทําการ Merge ข้อมูลเข้าด้วยกัน และหาสัดส่วนรายจ่ายต่อรายได้โดยนําข้อมูลค่าใช้จ่ายมาหารข้อมูลรายได้
 ````
-group_in_yr = df_in.groupby(['year','source_income'])
-df_in_gyr = group_in_yr['value'].mean().reset_index()
+df_in_gyr = df_in.groupby(['year','source_income'])['value'].mean().reset_index()
 df_in_gyr = df_in_gyr.groupby(['year'])['value'].sum().reset_index()
 
-group_x_yr = df_x.groupby(['year','type_expenditur'])
-df_x_gyr = group_x_yr['value'].mean().reset_index()
+df_x_gyr = df_x.groupby(['year','type_expenditur'])['value'].mean().reset_index()
 df_x_gyr = df_x_gyr.groupby(['year'])['value'].sum().reset_index()
 
 df_merge_yr = pd.merge(df_in_gyr,df_x_gyr, left_on='year', right_on='year', how='left' )
@@ -288,12 +284,9 @@ Q1) แนวโน้ม รายได้ และ รายจ่าย เ
 * Group ข้อมูลรายได้ตามประเภท(Categories) และ Sort จากมากไปน้อย โดยใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562
 
 ````
-group_in_type = df_in2.groupby('source_income')
-df_in2_type = group_in_type.agg('mean')
-df_in2_type.drop('year',inplace=True,axis=1)
-df_in2_type = df_in2_type.astype({'value': int}).reset_index()
+df_in2_type = df_in2.groupby('source_income')['value'].agg('mean').reset_index()
 df_in2_type.sort_values(by=['value'],inplace=True,ascending=False)
-df_in2_type = df_in2_type.reset_index(drop=True)
+df_in2_type = df_in2_type.astype({'value': int}).reset_index(drop=True)
 display(df_in2_type)
 ````
 ![image](https://user-images.githubusercontent.com/101727971/196026126-06cb4361-e4e1-4cfa-94f0-f1ab0a8d6545.png)
@@ -302,13 +295,10 @@ display(df_in2_type)
 * Group ข้อมูลประเภทของรายจ่ายตามประเภท(Categories) จากนั้นปรับข้อมูลรายจ่ายให้ตัวเลขเป็นแบบติดลบ และทําการ Sort โดยใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562
 
 ````
-group_x_type = df_x2.groupby(['type_expenditur'])
-df_x2_type = group_x_type.agg('mean')
-df_x2_type.drop('year',inplace=True,axis=1)
-df_x2_type = df_x2_type.astype({'value': int}).reset_index()
+df_x2_type = df_x2.groupby(['type_expenditur'])['value'].agg('mean').reset_index()
 df_x2_type['value'] = -df_x2_type['value'].abs()
 df_x2_type.sort_values(by=['value'],inplace=True,ascending=False)
-df_x2_type = df_x2_type.reset_index(drop=True)
+df_x2_type = df_x2_type.astype({'value': int}).reset_index(drop=True)
 display(df_x2_type)
 ````
 
@@ -361,33 +351,26 @@ Q2) คนไทยหมดค่าใช้จ่ายไปกับอะ�
 
 # Income and Expense by Region
 
-* ทําการ Grouping ของมูลในส่วนของรายได้ และ รายจ่ายในรูปแบบ region โดยจะใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562 เนื่องจากเป็นข้อมูลกี่ไกล้เคียงปัจจุปัน 
+* ทําการ Grouping ของมูลในส่วนของรายได้ และ รายจ่ายในรูปแบบ region โดยจะใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562 เนื่องจากเป็นข้อมูลกี่ไกล้เคียงปัจจุปันเลยทําการ drop ปี 2554,2556,2558 ออก
 * พบว่าชื่อจังหวัดในตาราง Income และ Expense ไม่เหมือนกัน โดยในตาราง Income เป็น "กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ" แต่ ตาราง Expense เป็น "กทม. นนทบุรี ปทุมธานี และสมุทรปราการ" เลยทําการปรับแก้ชื่อให้เหมือนกัน
 * จากนั้น Merge ข้อมูล และ นํารายได้มาหักลบกับรายจ่ายเพื่อหา Saving (เงินคงเหลือเฉลี่ยต่อเดือน)
 
 ````
 drop_year = [2554,2556,2558]
 df_in2 = df_in
+df_x2 = df_x
 for yr in drop_year:
     df_in2 = df_in2.drop(df_in.index[df_in['year'] == yr])
-group_in_reg = df_in2.groupby(['year','region','source_income'])
-agg_in_reg = group_in_reg.agg('mean')
-group_in_reg = agg_in_reg.groupby(['year','region'])
-agg_in_reg = group_in_reg.agg('sum')
-group_in_reg = agg_in_reg.groupby(['region'])
-df_in2_reg = group_in_reg.agg('mean').reset_index()
+    df_x2 = df_x2.drop(df_x.index[df_x['year'] == yr])
 ````
 
 ````
-df_x2 = df_x
-for yr in drop_year:
-    df_x2 = df_x2.drop(df_x.index[df_x['year'] == yr])
-group_x_reg = df_x2.groupby(['year','region','type_expenditur'])
-agg_x_reg = group_x_reg.agg('mean')
-group_x_reg = agg_x_reg.groupby(['year','region'])
-agg_x_reg = group_x_reg.agg('sum')
-group_x_reg = agg_x_reg.groupby(['region'])
-df_x2_reg = group_x_reg.agg('mean').reset_index()
+df_in2_reg = df_in2.groupby(['year','region','source_income'])['value'].agg('mean').reset_index()
+df_in2_reg = df_in2_reg.groupby(['year','region'])['value'].agg('sum').reset_index()
+df_in2_reg = df_in2_reg.groupby(['region'])['value'].agg('mean').reset_index()
+df_x2_reg = df_x2.groupby(['year','region','type_expenditur'])['value'].agg('mean').reset_index()
+df_x2_reg = df_x2_reg.groupby(['year','region'])['value'].agg('sum')
+df_x2_reg = df_x2_reg.groupby(['region']).agg('mean').reset_index()
 ````
 
 ````
@@ -399,6 +382,9 @@ df_merge_reg.rename(columns = {'value_x':'Avg. Monthly Income','value_y':'Avg. M
 df_merge_reg = df_merge_reg.replace('กทม. นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นน. ปทุม. สุมุทรปราการ') 
 display(df_merge_reg)
 ````
+
+![image](https://user-images.githubusercontent.com/101727971/196050385-b82cfb2a-e0be-4481-9d96-59337424fefb.png)
+
 
 * ปรับตารางจาก Wide เป็น long แล้วทําการ Plot graph ข้อมูล รายได้ รายจ่าย และเงินคงเหลือ แยกตาม Region
 
@@ -430,23 +416,15 @@ Q3) ภาคไหนใดในประเทศมีเงินคงเ�
 * ปรับแต่งชื่อตามความเหมาะสม
 
 ````
-group_in_class = df_in2.groupby(['soc_eco_class','source_income'])
-df_in2_class = group_in_class.agg('mean').reset_index()
-group_in_class = df_in2_class.groupby(['soc_eco_class'])
-df_in2_class = group_in_class.agg('sum').reset_index()
-df_in2_class.drop('year',inplace=True,axis=1)
+df_in2_class = df_in2.groupby(['soc_eco_class','source_income'])['value'].agg('mean').reset_index()
+df_in2_class = df_in2_class.groupby(['soc_eco_class'])['value'].agg('sum').reset_index()
 df_in2_class = df_in2_class.astype({'value': int}).reset_index(drop=True)
-df_in2_class
 ````
 
 ````
-group_x_class = df_x2.groupby(['soc_eco_class','type_expenditur'])
-df_x2_class = group_x_class.agg('mean').reset_index()
-group_x_class = df_x2_class.groupby(['soc_eco_class'])
-df_x2_class = group_x_class.agg('sum').reset_index()
-df_x2_class.drop('year',inplace=True,axis=1)
+df_x2_class = df_x2.groupby(['soc_eco_class','type_expenditur'])['value'].agg('mean').reset_index()
+df_x2_class = df_x2_class.groupby(['soc_eco_class']).agg('sum').reset_index()
 df_x2_class = df_x2_class.astype({'value': int}).reset_index(drop=True)
-df_x2_class
 ````
 
 ````
@@ -458,8 +436,6 @@ df_merge_class.rename(columns = {'ผู้ถือครองทำการ�
                                 'ผู้ถือครองทำการเกษตร ปลูกพืช เลี้ยงสัตว์ ที่ดินของตนเอง',
                                 'ผู้ถือครองทำการเกษตร การปลูกพืช การเลี้ยงสัตว์ และการเพาะเลี้ยงสัตวน้ำ ซึ่งที่ดินส่วนใหญ่เช่าผู้อื่น/ที่สาธารณะ/อื่น ๆ':
                                 'ผู้ถือครองทำการเกษตร ปลูกพืช เลี้ยงสัตว์ ที่ดินเช่า'},inplace=True)
-df_merge_class['soc_eco_class'] = df_merge_class['soc_eco_class'].str.replace('ผู้ถือครองทำการเกษตร การปลูกพืช การเลี้ยงสัตว์ และการเพาะเลี้ยงสัตวน้ำ ซึ่งที่ดินส่วนใหญ่เป็นของตนเอง','ผู้ถือครองทำการเกษตร ปลูกพืช เลี้ยงสัตว์ ที่ดินของตนเอง')
-df_merge_class['soc_eco_class'] = df_merge_class['soc_eco_class'].str.replace('ผู้ถือครองทำการเกษตร การปลูกพืช การเลี้ยงสัตว์ และการเพาะเลี้ยงสัตวน้ำ ซึ่งที่ดินส่วนใหญ่เช่าผู้อื่น/ที่สาธารณะ/อื่น ๆ','ผู้ถือครองทำการเกษตร ปลูกพืช เลี้ยงสัตว์ ที่ดินเช่า')
 df_merge_class = df_merge_class.reset_index(drop=True)
 display(df_merge_class)
 ````
@@ -498,26 +474,21 @@ Q4) คนประกอบอาชีพอะไรมีเงินคง�
 
 ````
 df_in_argi = df_in[(df_in['soc_eco_class'] == 'คนงานเกษตร')]
-group_in_argi = df_in_argi.groupby(['year','region','source_income'])
-df_in_argi = group_in_argi.agg('mean').reset_index()
-group_in_argi = df_in_argi.groupby(['year','region'])
-df_in_argi = group_in_argi.agg('sum').reset_index()
-df_in_argi = df_in_argi.replace('กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
+df_in_argi = df_in_argi.groupby(['year','region','source_income'])['value'].agg('mean').reset_index()
+df_in_argi = df_in_argi.groupby(['year','region']).agg('sum').reset_index()
+df_in_argi = df_in_argi.replace('กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นนทบุรี ปทุมธานี และสมุทรปราการ')
 ````
 
 ````
 df_x_argi = df_x[(df_x['soc_eco_class'] == 'คนงานเกษตร')]
-group_x_argi = df_x_argi.groupby(['year','region','type_expenditur'])
-df_x_argi = group_x_argi.agg('mean').reset_index()
-group_x_argi = df_x_argi.groupby(['year','region'])
-df_x_argi = group_x_argi.agg('sum').reset_index()
+df_x_argi = df_x_argi.groupby(['year','region','type_expenditur'])['value'].agg('mean').reset_index()
+df_x_argi= df_x_argi.groupby(['year','region'])['value'].agg('sum').reset_index()
 ````
 
 ````
 df_merge_argi = pd.merge(df_in_argi,df_x_argi, left_on =['year','region'], right_on =['year','region'], how ='left' )
 df_merge_argi.rename(columns = {'value_x':'Avg. Monthly Income','value_y':'Avg. Monthly Expense'},inplace=True)
 df_merge_argi['Avg. Monthly Saving'] = df_merge_argi['Avg. Monthly Income'] - df_merge_argi['Avg. Monthly Expense']
-df_merge_argi
 ````
 
 ````
