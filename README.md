@@ -37,6 +37,9 @@ Q5) ใครแนวโน้มที่จะมีเงินเหลื�
 # DATA COLLECTION
 ![Capture](https://user-images.githubusercontent.com/101727971/195891361-aba3a898-005d-47c5-a2eb-4e54b420992d.JPG)
 
+
+* Load ข้อมูลมาจากสํานักงานสถิติแห่งชาติ
+
 ````
 data_income = pd.read_csv('Income.csv')
 data_expense = pd.read_csv('Expense.csv')
