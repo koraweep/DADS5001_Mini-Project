@@ -233,7 +233,7 @@ df_x.loc[1645,'value'] = list_x_adjusted[2]
 
 * ทําการวิเคราะห์ข้อมูลในแง่มุมต่างๆ เพื่อสามารถที่จะสอบโจทย์ของปัญหาที่อยากรู้ใน Dataset ชุดนี้
 
-**1. Time Series of Income and Expense**
+# Time Series of Income and Expense
 
 * ทําการ grouping ข้อมูล รายได้ และ รายจ่าย ให้เป็นรูปแบบรายปี และทําการ Merge ข้อมูลเข้าด้วยกัน และหาสัดส่วนรายจ่ายต่อรายได้โดยนําข้อมูลค่าใช้จ่ายมาหารข้อมูลรายได้
 ````
@@ -277,10 +277,117 @@ ax2.bar_label(ax2.containers[0])
 ax2.set_ylim(bottom=0, top=1.5)
 ````
 
-![image](https://user-images.githubusercontent.com/101727971/196023665-78c703a7-5518-430f-87a2-523c6d83b9df.png)
+![image](https://user-images.githubusercontent.com/101727971/196025501-d4325a4d-1b0f-4a85-8797-ba4b610b1ccb.png)
 
 
 Q1) แนวโน้ม รายได้ และ รายจ่าย เฉลี่ยต่อครัวเรือนเป็นอย่างไร คนไทยมีเงินคงเหลือเพิ่มขึ้นหรือไม่ 
 * จากข้อมูลพบว่า เมื่อเทียบกับปี 2554 แม้รายได้เฉลี่ยต่อครัวเรือนจะเพิ่มสูงขึ้น แต่รายจ่ายก็เพิ่มสูงขึ้นเช่นกัน อีกทั้งแนวโน้มอันตราที่เพิ่มขึ้นยังสูงกว่ารายได้อีกด้วย ทําได้ สัดส่วนของรายได้ต่อรายจ่าย จากที่เดิมเคยอยู่ประมาณ 74% สูงขึ้นเป็นเกือบ 80% ในปีหลังๆ สรุปก็คือ คนไทยมีแนวโน้มที่จะมีเงินเหลือในแต่ละเดือนน้อยลงเรื่อยๆ
 
+# Income and Expense by Categories
+
+* Group ข้อมูลรายได้ตามประเภท(Categories) และ Sort จากมากไปน้อย โดยใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562
+
+````
+group_in_type = df_in2.groupby('source_income')
+df_in2_type = group_in_type.agg('mean')
+df_in2_type.drop('year',inplace=True,axis=1)
+df_in2_type = df_in2_type.astype({'value': int}).reset_index()
+df_in2_type.sort_values(by=['value'],inplace=True,ascending=False)
+df_in2_type = df_in2_type.reset_index(drop=True)
+display(df_in2_type)
+````
+![image](https://user-images.githubusercontent.com/101727971/196026126-06cb4361-e4e1-4cfa-94f0-f1ab0a8d6545.png)
+
+
+* Group ข้อมูลประเภทของรายจ่ายตามประเภท(Categories) จากนั้นปรับข้อมูลรายจ่ายให้ตัวเลขเป็นแบบติดลบ และทําการ Sort โดยใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562
+
+````
+group_x_type = df_x2.groupby(['region','type_expenditur','soc_eco_class'])
+df_x2_type = group_x_type.agg('mean')
+group_x_type = df_x2.groupby(['type_expenditur','soc_eco_class'])
+df_x2_type = group_x_type.agg('mean')
+group_x_type = df_x2.groupby(['type_expenditur'])
+df_x2_type = group_x_type.agg('mean')
+
+df_x2_type.drop('year',inplace=True,axis=1)
+df_x2_type = df_x2_type.astype({'value': int}).reset_index()
+df_x2_type['value'] = -df_x2_type['value'].abs()
+df_x2_type.sort_values(by=['value'],inplace=True,ascending=False)
+df_x2_type = df_x2_type.reset_index(drop=True)
+display(df_x2_type)
+````
+
+![image](https://user-images.githubusercontent.com/101727971/196026296-1674146f-12f4-44a9-bae8-1f4bafc1f9e2.png)
+
+
+* เพื่อที่จะจัดทํา Graph ตามที่รูปแบบที่ต้องเลยใช้วิธี  
+  - จัดทําเป็น 2 Graph คือ Graph รายได้ และ Graph รายจ่าย จากนั้น ตัดพวก label ออกและทํา Scale ให้เท่่ากับกัน สุดท้ายจัดระยะห่างระหว่าง 2 Graph ให็เป็น 0 (hspace = 0) และปรับสัดส่วนของทั้ง 2 Graph ให้เหมาะสม
+
+
+
+
+
+# Income and Expense Seperated by Region
+
+* ทําการ Grouping ของมูลในส่วนของรายได้ และ รายจ่ายในรูปแบบ region โดยจะใช้ข้อมูลเฉลี่ยของปี 2560 และ 2562 เนื่องจากเป็นข้อมูลกี่ไกล้เคียงปัจจุปัน 
+* พบว่าชื่อจังหวัดในตาราง Income และ Expense ไม่เหมือนกัน โดยในตาราง Income เป็น "กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ" แต่ ตาราง Expense เป็น "กทม. นนทบุรี ปทุมธานี และสมุทรปราการ" เลยทําการปรับแก้ชื่อให้เหมือนกัน
+* จากนั้น Merge ข้อมูล และ นํารายได้มาหักลบกับรายจ่ายเพื่อหา Saving (เงินคงเหลือเฉลี่ยต่อเดือน)
+
+````
+drop_year = [2554,2556,2558]
+df_in2 = df_in
+for yr in drop_year:
+    df_in2 = df_in2.drop(df_in.index[df_in['year'] == yr])
+group_in_reg = df_in2.groupby(['year','region','source_income'])
+agg_in_reg = group_in_reg.agg('mean')
+group_in_reg = agg_in_reg.groupby(['year','region'])
+agg_in_reg = group_in_reg.agg('sum')
+group_in_reg = agg_in_reg.groupby(['region'])
+df_in2_reg = group_in_reg.agg('mean').reset_index()
+````
+
+````
+df_x2 = df_x
+for yr in drop_year:
+    df_x2 = df_x2.drop(df_x.index[df_x['year'] == yr])
+group_x_reg = df_x2.groupby(['year','region','type_expenditur'])
+agg_x_reg = group_x_reg.agg('mean')
+group_x_reg = agg_x_reg.groupby(['year','region'])
+agg_x_reg = group_x_reg.agg('sum')
+group_x_reg = agg_x_reg.groupby(['region'])
+df_x2_reg = group_x_reg.agg('mean').reset_index()
+````
+
+````
+df_in2_reg_ = df_in2_reg.replace('กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นนทบุรี ปทุมธานี และสมุทรปราการ')
+df_merge_reg = pd.merge(df_in2_reg_,df_x2_reg, left_on ='region', right_on ='region', how ='left' )
+df_merge_reg = df_merge_reg.astype({'value_x': int, 'value_y': int})
+df_merge_reg['Avg. Monthly Saving'] = df_merge_reg['value_x'] - df_merge_reg['value_y']
+df_merge_reg.rename(columns = {'value_x':'Avg. Monthly Income','value_y':'Avg. Monthly Expense'},inplace=True)
+df_merge_reg = df_merge_reg.replace('กทม. นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นน. ปทุม. สุมุทรปราการ') 
+display(df_merge_reg)
+````
+
+* ปรับตารางจาก Wide เป็น long แล้วทําการ Plot graph ข้อมูล รายได้ รายจ่าย และเงินคงเหลือ แยกตาม Region
+
+````
+bar_plot_reg = df_merge_reg.melt( id_vars=['region'],value_vars=['Avg. Monthly Income','Avg. Monthly Expense','Avg. Monthly Saving'] )   
+
+sns.set(font='Tahoma',font_scale =1.5)
+fig,ax = plt.subplots(figsize=(15, 10),dpi=300)
+fig.suptitle('INCOME AND EXPENSE BY REGION',size=30)
+fig.subplots_adjust(top=9.2/10)
+
+sns.barplot(data=bar_plot_reg, x='region', y='value', hue='variable',ax=ax)
+ax.set( ylabel= None, xlabel= None)
+ax.legend_.set_title(None)
+ax.legend(frameon=True,loc=1,edgecolor = 'grey',facecolor = 'white')
+````
+
+![image](https://user-images.githubusercontent.com/101727971/196025791-15d7521d-650e-4d99-a00b-1e10ca3711d5.png)
+
+
+Q3) ภาคไหนใดในประเทศมีเงินคงเหลือ มากที่สุด และภาคใดน้อยที่สุด  
+* ใน Zone กรุงเทพและจังหวัดไกล้เคียงมีรายได้เฉลี่ยสูงที่สุด และภาคเหนือมีรายได้เฉลี่ยน้อยที่สุด แต่อย่างไรก็ตาม Zone กรุงเทพก็มีค่าใช้จ่ายสูงที่สุด และภาคเหนือน้อยที่สุด เช่นกัน
+* โดยถ้ามองเป็นเงินคงเหลือจริงๆ จะพบว่า ภาคใต้ มีเงินคงเหลือเฉลี่ยในแต่ละเดือนสูงที่สุด
 
