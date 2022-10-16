@@ -322,10 +322,47 @@ display(df_x2_type)
 
 * เพื่อที่จะจัดทํา Graph ตามที่รูปแบบที่ต้องเลยใช้วิธี  
   - จัดทําเป็น 2 Graph คือ Graph รายได้ และ Graph รายจ่าย จากนั้น ตัดพวก label ออกและทํา Scale ให้เท่่ากับกัน สุดท้ายจัดระยะห่างระหว่าง 2 Graph ให็เป็น 0 (hspace = 0) และปรับสัดส่วนของทั้ง 2 Graph ให้เหมาะสม
+  - เนื่องไม่สามารถจากจะจัด label ของประเภทค่าใช้จ่ายให้อยู่ไกล้ bar chart แบบที่มีทั้งบวก (label อยู่ซ้าย) และลบ (label อยู่ขวา) โดยใช้คํานั่งจาก function ประจําพวก label ได้จึงใช้การใส่ text เข้าไปแทนโดยเริ่มจากหา position ที่ถูกต้องและทําการ for loop เพื่อใส่ label ที่มีระยะห่างเท่าๆกันได้
 
 
+````
+sns.set(font='Tahoma',font_scale =2,rc={'axes.facecolor':'#EAEAF2'})
+fig,(ax1,ax2) = plt.subplots(2,sharex=False,sharey=False,figsize=(15, 15),dpi=300,gridspec_kw={'height_ratios': [5, 12]})
+fig.suptitle('INCOME AND EXPENSE CATEGORIES',size=40)
+fig.subplots_adjust(hspace=0,left=-0.3,right=1.3,top=13.8/15)
+
+sns.barplot(data=df_in2_type, x = 'value', y = 'source_income',ax=ax1,color='#4C72B0',facecolor=None)
+ax1.set(xlim=(-10000,20000),ylabel=None,xlabel=None)
+ax1.set_xticklabels([])
+ax1.set_yticklabels([])
+ax1.bar_label(ax1.containers[0],labels=[f'{x:,.0f}' for x in ax1.containers[0].datavalues],color='#4C72B0',size=30)
+
+sns.barplot(data=df_x2_type, x ='value', y = 'type_expenditur',ax=ax2,color='#CD5C5C')
+sns.despine(fig=None, ax=ax2, top=True, right=True, left=True, bottom=True)
+ax2.set(xlim=(-10000,20000),ylabel=None,xlabel=None)
+ax2.set_yticklabels([])
+ax2.set_xticklabels([])
+ax2.bar_label(ax2.containers[0],labels=[f'{x:,.0f}' for x in ax2.containers[0].datavalues],color='#CD5C5C',size=30)
+
+y_tick_in = df_in2_type['source_income'].tolist()
+y_tick_x = df_x2_type['type_expenditur'].tolist()
+pos_in = 0.1
+pos_x = 0.1
+
+for i in y_tick_in:
+    ax1.text(0,pos_in,i,ha='right',size=25,color='#4C72B0')
+    pos_in = pos_in+1
+for i in y_tick_x:
+    ax2.text(0,pos_x,i,ha='left',size=25,color='#CD5C5C')
+    pos_x = pos_x+1  
+````  
 
 
+![image](https://user-images.githubusercontent.com/101727971/196027058-66608dd7-504a-4778-ae78-ae957e4fc67d.png)
+
+
+Q2) คนไทยหมดค่าใช้จ่ายไปกับอะไรมากที่สุด ในแต่ละเดือน  
+- จากข้อมูลพบว่า รายได้หลักของครัวเรือนคือ รายได้ประจําที่เป็นรายได้จากการทํางาน และ จริงๆแล้วคนไทยไม่ได้ฟุ่มเฟือยเลย โดยมีค่าใช้จ่ายๆหลักๆเพื่อการอุปโภคบริโภค ในส่วนของ อาหารและเครื่องเดื่ม และ การเดินทางกับการสื่อสาร
 
 # Income and Expense Seperated by Region
 
