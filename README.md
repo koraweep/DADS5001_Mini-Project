@@ -42,10 +42,10 @@ data_income = pd.read_csv('Income.csv')
 data_expense = pd.read_csv('Expense.csv')
 ````
 
-# DATA CLEANING
+# DATA CLEANSING
 * ข้อมูลต้นฉบับมีข้อมูลเชิง aggregate(รวม) อยู่ในหลาย column เช่น region มี ทั่วประเทศ หรือ source_income มี รายได้ทั้งสิ้น(รวม) ซึ่งข้อมูลเหล่านี้ในต้นฉบับเป็นค่าคงที่ ถ้ามีการปรับแต่งข้อมูลในตาราง ข้อมูลรวมเหล่านี้จะไม่สามารถใช้ได้ เลยจะขอตัดออก และทําข้อมูลรวมขึ้นมาเองด้วยใช้ aggregate function
 
-# Cleaning Income Table
+# Cleansing Income Table
 
 * ทําการสํารวจข้อมูลในตาราง Income Dataset พบว่าข้อมูลนตาราง value มีจํานวนไม่เท่ากับกลุ่มอื่นๆ
 
@@ -136,7 +136,7 @@ df_in.fillna(0,inplace=True)
 ![image](https://user-images.githubusercontent.com/101727971/195995493-bc34eabd-eb60-4043-9824-c8a0d8ab2299.png)
 
 
-# Cleaning Expense Table
+# Cleansing Expense Table
 
 * ทําการสํารวจข้อมูลในตาราง Expense Table
 
@@ -230,28 +230,53 @@ df_x.loc[1645,'value'] = list_x_adjusted[2]
 
 
 # DATA ANALYSIS (GROUP,TRANSFORM,PLOT)
+
+* ทําการวิเคราะห์ข้อมูลในแง่มุมต่างๆ เพื่อสามารถที่จะสอบโจทย์ของปัญหาที่อยากรู้ใน Dataset ชุดนี้
+
 **1. Time Series of Income and Expense**
-````group_in_yr = df_in.groupby(['year','source_income'])
+
+* ทําการ grouping ข้อมูล รายได้ และ รายจ่าย ให้เป็นรูปแบบรายปี และทําการ Merge ข้อมูลเข้าด้วยกัน และหาสัดส่วนรายจ่ายต่อรายได้โดยนําข้อมูลค่าใช้จ่ายมาหารข้อมูลรายได้
+````
+group_in_yr = df_in.groupby(['year','source_income'])
 df_in_gyr = group_in_yr['value'].mean().reset_index()
 df_in_gyr = df_in_gyr.groupby(['year'])['value'].sum().reset_index()
-df_in_gyr.rename(columns = {'value':'Avg. Monthly Income'})
-````
-![Capture](https://user-images.githubusercontent.com/101727971/195875574-9217a377-91e8-4b60-98ae-32dbc2f894f2.JPG)
-````group_x_yr = df_x.groupby(['year','type_expenditur'])
+
+group_x_yr = df_x.groupby(['year','type_expenditur'])
 df_x_gyr = group_x_yr['value'].mean().reset_index()
 df_x_gyr = df_x_gyr.groupby(['year'])['value'].sum().reset_index()
-df_x_gyr.rename(columns = {'value':'Avg. Monthly Expense'})
-````
-````df_merge_yr = pd.merge(df_in_gyr,df_x_gyr, left_on='year', right_on='year', how='left' )
+
+df_merge_yr = pd.merge(df_in_gyr,df_x_gyr, left_on='year', right_on='year', how='left' )
 df_merge_yr = df_merge_yr.astype({'value_x': int, 'value_y': int})
 df_merge_yr['Ratio Expense/Income'] = round(df_merge_yr['value_y'] / df_merge_yr['value_x'],2)
 df_merge_yr.rename(columns = {'value_x':'Avg. Monthly Income','value_y':'Avg. Monthly Expense'},inplace=True)
+display(df_merge_yr)
+````
 
-display(df_merge_yr)
+![image](https://user-images.githubusercontent.com/101727971/196023442-3722b0e5-856e-4b06-b4e1-fafaf88e257c.png)
+
+
+* ปรับข้อมูลจากแบบ wide ให้เป็นแบบ long และทําการ Plot Graph ข้อมูลรายได้ และ ค่าใช้จ่ายรายปี
+
 ````
-````# Preparing Data for plot (from wide to long)
-line_plot_yr = df_merge_yr.melt( id_vars=['year'],value_vars=['Avg. Monthly Income','Avg. Monthly Expense'] )          
-display(line_plot_yr)
-display(df_merge_yr)
+line_plot_yr = df_merge_yr.melt( id_vars=['year'],value_vars=['Avg. Monthly Income','Avg. Monthly Expense'] ) 
+sns.set(font_scale= 2)
+fig,(ax1,ax2) = plt.subplots(2,sharex=False,sharey=False,figsize=(15, 10),dpi=300,gridspec_kw={'height_ratios': [2, 1]})
+fig.suptitle('YEARLY INCOME AND EXPENSE')
+fig.subplots_adjust(hspace=0.3)
+
+ax1 = sns.lineplot(data= line_plot_yr, x='year', y='value', hue='variable',marker='o',linewidth=6,markersize=12,ax=ax1)
+ax1.legend_.set_title(None)
+ax1.set_ylim(bottom=0, top=30000)
+ax1.set(ylabel=None,xlabel=None,title='Avg. Monthly Income and Expense')
+ax1.xaxis.set_major_locator(ticker.MultipleLocator(2))
+ax1.legend(frameon=True,loc=4,edgecolor = 'grey',facecolor = 'white')
+
+ax2 = sns.barplot(data= df_merge_yr, x='year', y='Ratio Expense/Income',color='#CD5C5C',ax=ax2)
+ax2.set(ylabel=None,xlabel=None,title = 'Expense to Income Ratio')
+ax2.bar_label(ax2.containers[0])
+ax2.set_ylim(bottom=0, top=1.5)
 ````
+
+![image](https://user-images.githubusercontent.com/101727971/196023665-78c703a7-5518-430f-87a2-523c6d83b9df.png)
+
 
