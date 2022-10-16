@@ -32,7 +32,7 @@ Q1) แนวโน้ม รายได้ และ รายจ่าย เ
 Q2) คนไทยหมดค่าใช้จ่ายไปกับอะไรมากที่สุด ในแต่ละเดือน  
 Q3) ภาคไหนใดในประเทศมีเงินคงเหลือ มากที่สุด และภาคใดน้อยที่สุด  
 Q4) คนประกอบอาชีพอะไรมีเงินคงเหลือ มากที่สุด และอาชีพใดน้อยที่สุด  
-Q5) ใครมีเงินเหลือน้อยที่สุด
+Q5) ใครแนวโน้มที่จะมีเงินเหลือน้อยที่สุด
 
 # DATA COLLECTION
 ![Capture](https://user-images.githubusercontent.com/101727971/195891361-aba3a898-005d-47c5-a2eb-4e54b420992d.JPG)
@@ -496,4 +496,48 @@ ax.legend(frameon=True,loc=4,edgecolor = 'grey',facecolor = 'white')
 Q4) คนประกอบอาชีพอะไรมีเงินคงเหลือ มากที่สุด และอาชีพใดน้อยที่สุด  
 - กลุ่ม อาชีพ ผู้ปฎิบัตงานวิชาชีพ นักวิชาการ และนักบริหาร มีรายได้สูงสุด ถึงไม้จะมีรายใช้สูงสุดด้วย แต่ก็ยังคงมีเงินเหลือในแต่ละเดือนสูงสุด
 - กลุ่ม อาขีพ คนงานเกษตร มีรายได้ และเงินคงเหลือน้อยทึ่สุด โดยเฉลี่ยเหลือไม่ถึง 1500 บาท/เดือน
+
+# Trend เงินคงเหลือของ คนงานเกษตร ในแต่ละปี แต่ละภาค
+* ตรวจสอบเพิ่มเติมว่า คนงานเกษตร ที่อยู่ภาคใดและช่วงไหนมีเงินคงเหลือน้อยที่สุด
+
+* Group ข้อมูลยอดรวม Income และ Expense ของคนงานเกษตรในแต่ละภาค แต่ละปี
+* ปรับแก้ชื่อภาคที่สะกดไม่เหมือนกัน ให้เหมือนกัน
+* Merge ข้อมูลตาราง Income และ Expense จากนั้นใช้ในการหา Monthly Saving(เงินคงเหลือ)
+* จากนั้นทําการ Plot Graph
+
+````
+df_in_argi = df_in[(df_in['soc_eco_class'] == 'คนงานเกษตร')]
+group_in_argi = df_in_argi.groupby(['year','region','soc_eco_class','source_income'])
+df_in_argi = group_in_argi.agg('mean').reset_index()
+group_in_argi = df_in_argi.groupby(['year','region','soc_eco_class'])
+df_in_argi = group_in_argi.agg('sum').reset_index()
+df_in_argi = df_in_argi.drop(columns=['soc_eco_class'])
+df_in_argi = df_in_argi.replace('กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ','กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
+````
+
+````
+df_x_argi = df_x[(df_x['soc_eco_class'] == 'คนงานเกษตร')]
+group_x_argi = df_x_argi.groupby(['year','region','soc_eco_class','type_expenditur'])
+df_x_argi = group_x_argi.agg('mean').reset_index()
+group_x_argi = df_x_argi.groupby(['year','region','soc_eco_class'])
+df_x_argi = group_x_argi.agg('sum').reset_index()
+df_x_argi = df_x_argi.drop(columns=['soc_eco_class'])
+````
+
+````
+df_merge_argi = pd.merge(df_in_argi,df_x_argi, left_on =['year','region'], right_on =['year','region'], how ='left' )
+df_merge_argi.rename(columns = {'value_x':'Avg. Monthly Income','value_y':'Avg. Monthly Expense'},inplace=True)
+df_merge_argi['Avg. Monthly Saving'] = df_merge_argi['Avg. Monthly Income'] - df_merge_argi['Avg. Monthly Expense']
+df_merge_argi
+````
+
+````
+df_plot_low = df_merge_argi.drop(columns = ['Avg. Monthly Income','Avg. Monthly Expense'])
+pivot = df_plot_low.pivot_table(index= 'region',columns='year',values = 'Avg. Monthly Saving')
+fig,ax = plt.subplots(figsize=(15, 10),dpi=300)
+fig.suptitle('คนงานเกษตร: Monthly Saving',ha='right')
+ax = sns.heatmap(pivot,linewidths=1,annot=True,fmt='.0f',cbar_kws ={"shrink":.8,'extend':'both'})
+````
+
+![image](https://user-images.githubusercontent.com/101727971/196038676-7651286f-1578-4703-8ec9-561b5e30cdfb.png)
 
