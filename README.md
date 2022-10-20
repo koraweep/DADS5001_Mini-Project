@@ -191,39 +191,30 @@ df_x_adjusted = group2_x_adjusted.drop(group2_x_adjusted[(group2_x_adjusted['yea
 df_x_adjusted = df_x_adjusted.groupby(['type_expenditur']).agg('mean').reset_index()
 df_x_adjusted = df_x_adjusted.drop(columns =['year'])
 list_x_adjusted = df_x_adjusted.value.tolist()
+dict_x_adjusted = df_x_adjusted.set_index('type_expenditur').T.to_dict('list')
 display(df_x_adjusted)
-print(list_x_adjusted)
 ````
 
 ![image](https://user-images.githubusercontent.com/101727971/196022352-b16b8501-1af3-4a5c-8fe3-8dcde2580a45.png)
 
 
-* ทําการ replace ข้อมูลเฉลี่ยค่าใช้จ่ายของตัวเรือนแต่ละประเภทที่ข้อมูลเป็น 0 ในตารางหลัก ด้วยข้อมูลค่าใช้จ่ายเฉลี่ยที่หามาได้ โดยทําการ replace ทั้ง 10 ประเภทที่ข้อมูลไม่เป็น 0 (ตัวอย่างการทํา 2 ครั้งด้านล่าง)
+* ทําการ replace ข้อมูลเฉลี่ยค่าใช้จ่ายของครัวเรือนแต่ละประเภทที่ข้อมูลเป็น 0 ในตารางหลัก ด้วยข้อมูลค่าใช้จ่ายเฉลี่ยที่หามาได้ โดยทําการ replace ทั้ง 10 ประเภทที่ข้อมูลไม่เป็น 0
+* ทําการตรวจสอบว่าตัวเลขถูกแก้ไขแล้วหรือยัง (soc_eco_class ที่เป็น 'ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร' ที่ region เป็น 'กรุงเทพ นนทบุรี ปทุมธานี และสมุทรปราการ') 
 
 ````
-df_x[((df_x['year'] == 2554)|(df_x['year'] == 2560)) & (df_x['region'] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
-            & (df_x['soc_eco_class'] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร')
-            & (df_x['type_expenditur'] == 'ค่าใช้จ่ายที่ไม่เกี่ยวกับการอุปโภคบริโภค')]
+for i,rows in df_x.iterrows():
+    if ((rows[0] == 2554)|(rows[0] == 2560)) & (rows[1] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') & (rows[3] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร'): 
+        for keys,value in dict_x_adjusted.items():
+            if (rows[2] == keys):
+                df_x.at[i,'value'] = value[0]
 ````
-![image](https://user-images.githubusercontent.com/101727971/196022521-59695df3-cf47-4d7c-a47a-28b87b2b14e9.png)
+````
+df_x_test = df_x[(df_x['region'] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') & (df_x['soc_eco_class'] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร')]
+group_x_test = round(df_x_test.groupby(['year']).agg('sum'),2)
+group_x_test.reset_index()
+````
+![image](https://user-images.githubusercontent.com/101727971/196920924-481f1d24-e155-4ffe-9456-8f4a5cf0160e.png)
 
-````
-df_x.loc[656,'value'] = list_x_adjusted[0]
-df_x.loc[1088,'value'] = list_x_adjusted[0]
-````
-
-````
-df_x[((df_x['year'] == 2554)|(df_x['year'] == 2560)) & (df_x['region'] == 'กทม. นนทบุรี ปทุมธานี และสมุทรปราการ') 
-            & (df_x['soc_eco_class'] =='ผู้ทำการประมง ป่าไม้ ล่าสัตว์ หาของป่า และบริการทางการเกษตร')
-            & (df_x['type_expenditur'] == 'ค่าใช้จ่ายเพื่อการอุปโภคบริโภค (การบันเทิง การอ่านและกิจกรรมทางศาสนา)')] 
-````
-
-![image](https://user-images.githubusercontent.com/101727971/196022624-08038cb5-be3d-47a7-81c0-7cfad1b2fc96.png)
-
-````
-df_x.loc[1198,'value'] = list_x_adjusted[2]
-df_x.loc[1645,'value'] = list_x_adjusted[2]
-````
 
 * สํารวจ Dataset ที่ปรับแก้อีกรอบ พบว่าข้อมูลน่าจะไม่มีปัญหา สามารถนําไปใข้งานได้
 
