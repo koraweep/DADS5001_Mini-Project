@@ -182,8 +182,7 @@ group_x_adjusted.reset_index()
 
 ![image](https://user-images.githubusercontent.com/101727971/195996827-b3614674-7b55-4088-a60b-1e14ad66ca68.png)
 
-* ทําการหาค่าเฉลี่ยของค่าใช้จ่ายในแต่ละประเภทในปีที่ 2556, 2558, 2562 ซึ่งข้อมูลไม่ได้เป็น 0 เพื่อไป replace value ในปี 2554 และ 2560 ซึ่งค่าใช้จ่ายเป็น 0 และทําการปรับค่าใช้จากรูปแบบ dataframe เป็น list ง่ายต่อการทํา replace value
-
+* ทําการหาค่าเฉลี่ยของค่าใช้จ่ายในแต่ละประเภทในปีที่ 2556, 2558, 2562 ซึ่งข้อมูลไม่ได้เป็น 0 เพื่อไป replace value ในปี 2554 และ 2560 ซึ่งค่าใช้จ่ายเป็น 0 
 
 ````
 df_x_adjusted = group2_x_adjusted.drop(group2_x_adjusted[(group2_x_adjusted['year'] == 2554) | 
